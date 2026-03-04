@@ -1,0 +1,42 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+build
+
+# Environment variables (keep strict security)
+.env
+.env.test
+.env.production
+.env.local
+# Allow the example file
+!.env.example
+
+# Docker and Database persistence
+# Ignore local database data to prevent large binary files and sensitive info
+docker/pg-data
+
+# IDEs and Editors
+.idea
+.vscode
+*.swp
+*.njjw
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.vZ
+Thumbs.db
+Ehthumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage
