@@ -12,10 +12,12 @@
     "url": "https://github.com/patriciasegantine/Brev.ly.git"
   },
   "scripts": {
-    "dev": "tsx watch --env-file .env src/server.ts",
-    "build": "tsup src --format esm",
+    "dev": "tsx watch src/server.ts",
+    "build": "tsup src",
     "start": "node dist/server.js",
-    "start-dev": "node --env-file .env dist/server.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
     "test": "vitest"
   },
   "devDependencies": {
@@ -38,6 +40,7 @@
     "fastify": "^5.2.0",
     "fastify-type-provider-zod": "^4.0.2",
     "postgres": "^3.4.7",
+    "uuidv7": "^1.1.0",
     "zod": "^3.24.1"
   }
 }
