@@ -7,9 +7,9 @@ import { asc, count, desc, ilike } from 'drizzle-orm';
 export const getLinksInput = z.object({
   searchQuery: z.string().optional(),
   sortBy: z.enum(['createdAt', 'accessCount']).optional(),
-  sortDirection: z.enum(['asc', 'desc']).optional().default('desc'),
-  page: z.coerce.number().int().optional().default(1).pipe(z.number().min(1)),
-  pageSize: z.coerce.number().int().optional().default(20).pipe(z.number().min(1)),
+  sortDirection: z.enum(['asc', 'desc']).optional(),
+  page: z.coerce.number().optional().default(1),
+  pageSize: z.coerce.number().optional().default(20),
 });
 
 export type GetLinksInput = z.input<typeof getLinksInput>;
@@ -32,7 +32,7 @@ export async function getLinks(
 ): Promise<Either<never, GetLinksOutput>> {
   const { searchQuery, sortBy, sortDirection, page, pageSize } =
     getLinksInput.parse(input);
-
+  
   const [links, [{ total }]] = await Promise.all([
     db
       .select({
@@ -47,17 +47,13 @@ export async function getLinks(
         searchQuery ? ilike(schema.links.shortUrl, `%${searchQuery}%`) : undefined
       )
       .orderBy((fields) => {
-        if (sortBy) {
-          return sortDirection === 'asc'
-            ? asc(fields[sortBy])
-            : desc(fields[sortBy]);
-        }
-
+        if (sortBy && sortDirection === 'asc') return asc(fields[sortBy]);
+        if (sortBy && sortDirection === 'desc') return desc(fields[sortBy]);
         return desc(fields.createdAt);
       })
       .offset((page - 1) * pageSize)
       .limit(pageSize),
-
+    
     db
       .select({ total: count(schema.links.id) })
       .from(schema.links)
@@ -65,6 +61,6 @@ export async function getLinks(
         searchQuery ? ilike(schema.links.shortUrl, `%${searchQuery}%`) : undefined
       ),
   ]);
-
+  
   return makeRight({ links, total, page, pageSize });
 }
