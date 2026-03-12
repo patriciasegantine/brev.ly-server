@@ -11,9 +11,9 @@ export async function getLinksRoute(app: FastifyInstance) {
         querystring: z.object({
           searchQuery: z.string().optional(),
           sortBy: z.enum(['createdAt', 'accessCount']).optional(),
-          sortDirection: z.enum(['asc', 'desc']).optional(),
-          page: z.coerce.number().optional().default(1),
-          pageSize: z.coerce.number().optional().default(20),
+          sortDirection: z.enum(['asc', 'desc']).optional().default('desc'),
+          page: z.coerce.number().int().optional().default(1).pipe(z.number().min(1)),
+          pageSize: z.coerce.number().int().optional().default(20).pipe(z.number().min(1)),
         }),
         response: {
           200: z.object({
