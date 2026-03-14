@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { type Either, makeLeft, makeRight } from '@/shared/either';
 import { db } from '@/db';
 import { schema } from '@/db/schemas';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 export const getLinkByShortUrlInput = z.object({
   shortUrl: z.string().min(1, { message: 'Short URL is required' }),
@@ -25,12 +25,14 @@ export async function getLinkByShortUrl(
   const { shortUrl } = getLinkByShortUrlInput.parse(input);
   
   const [link] = await db
-    .select({
-      originalUrl: schema.links.originalUrl,
+    .update(schema.links)
+    .set({
+      accessCount: sql`${schema.links.accessCount} + 1`,
     })
-    .from(schema.links)
     .where(eq(schema.links.shortUrl, shortUrl))
-    .limit(1);
+    .returning({
+      originalUrl: schema.links.originalUrl,
+    });
   
   if (!link) {
     return makeLeft({
