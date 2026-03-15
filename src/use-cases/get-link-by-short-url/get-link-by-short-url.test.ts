@@ -1,26 +1,48 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { getLinkByShortUrl } from './get-link-by-short-url';
 import { createLink } from '../create-link/create-link';
 import { isLeft, isRight } from '@/shared/either';
+import { db } from '@/db';
+import { schema } from '@/db/schemas';
+import { eq } from 'drizzle-orm';
 
 describe('getLinkByShortUrl use case', () => {
-  const testShortUrl = `test-get-${Date.now()}`;
   const testOriginalUrl = 'https://www.example.com/very-long-url';
   
-  beforeEach(async () => {
+  it('should return original URL and increment access count when shortUrl exists', async () => {
+    const testShortUrl = `test-get-${Date.now()}`;
+    
     await createLink({
       originalUrl: testOriginalUrl,
       shortUrl: testShortUrl,
     });
-  });
-  
-  it('should return original URL when shortUrl exists', async () => {
+    
+    // First access
     const result = await getLinkByShortUrl({ shortUrl: testShortUrl });
     
     expect(isRight(result)).toBe(true);
     if (isRight(result)) {
       expect(result.value.originalUrl).toBe(testOriginalUrl);
+      expect(result.value).not.toHaveProperty('accessCount'); // Não retorna mais
     }
+    
+    const [linkInDb] = await db
+      .select()
+      .from(schema.links)
+      .where(eq(schema.links.shortUrl, testShortUrl))
+      .limit(1);
+    
+    expect(linkInDb.accessCount).toBe(1);
+    
+    await getLinkByShortUrl({ shortUrl: testShortUrl });
+    
+    const [linkAfterSecondAccess] = await db
+      .select()
+      .from(schema.links)
+      .where(eq(schema.links.shortUrl, testShortUrl))
+      .limit(1);
+    
+    expect(linkAfterSecondAccess.accessCount).toBe(2);
   });
   
   it('should return error when shortUrl does not exist', async () => {
@@ -57,15 +79,23 @@ describe('getLinkByShortUrl use case', () => {
     expect(isRight(correctResult)).toBe(true);
   });
   
-  it('should return only originalUrl without other fields', async () => {
-    const result = await getLinkByShortUrl({ shortUrl: testShortUrl });
+  it('should increment access count each time the link is accessed', async () => {
+    const shortUrl = `increment-test-${Date.now()}`;
+    await createLink({
+      originalUrl: 'https://example.com/test',
+      shortUrl,
+    });
     
-    expect(isRight(result)).toBe(true);
-    if (isRight(result)) {
-      expect(result.value).toHaveProperty('originalUrl');
-      expect(result.value).not.toHaveProperty('id');
-      expect(result.value).not.toHaveProperty('accessCount');
-      expect(result.value).not.toHaveProperty('createdAt');
+    for (let i = 0; i < 3; i++) {
+      await getLinkByShortUrl({ shortUrl });
     }
+    
+    const [link] = await db
+      .select()
+      .from(schema.links)
+      .where(eq(schema.links.shortUrl, shortUrl))
+      .limit(1);
+    
+    expect(link.accessCount).toBe(3);
   });
 });

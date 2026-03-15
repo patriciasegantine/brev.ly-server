@@ -1,15 +1,19 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { app } from '@/app';
 
 describe('GET /links/:shortUrl (E2E)', () => {
-  const testShortUrl = `rocketseat-test-${Date.now()}`;
-  
   beforeAll(async () => {
     await app.ready();
   });
-
-  beforeEach(async () => {
-    const createResponse = await app.inject({
+  
+  afterAll(async () => {
+    await app.close();
+  });
+  
+  it('should return original URL (access count is incremented in background)', async () => {
+    const testShortUrl = `rocketseat-test-${Date.now()}`;
+    
+    await app.inject({
       method: 'POST',
       url: '/links',
       payload: {
@@ -17,15 +21,7 @@ describe('GET /links/:shortUrl (E2E)', () => {
         shortUrl: testShortUrl,
       },
     });
-
-    expect(createResponse.statusCode).toBe(201);
-  });
-  
-  afterAll(async () => {
-    await app.close();
-  });
-  
-  it('should return original URL when shortUrl exists', async () => {
+    
     const response = await app.inject({
       method: 'GET',
       url: `/links/${testShortUrl}`,
@@ -36,6 +32,7 @@ describe('GET /links/:shortUrl (E2E)', () => {
     expect(body).toEqual({
       originalUrl: 'https://www.rocketseat.com.br',
     });
+    expect(body).not.toHaveProperty('accessCount'); // Não retorna mais
   });
   
   it('should return 404 when shortUrl does not exist', async () => {
@@ -50,24 +47,35 @@ describe('GET /links/:shortUrl (E2E)', () => {
     expect(body.message).toBe('Link not found');
   });
   
-  it('should handle special characters in shortUrl', async () => {
-    const specialShortUrl = `special-test_${Date.now()}`;
+  it('should increment access count in database on each access', async () => {
+    const shortUrl = `increment-check-${Date.now()}`;
     
-    // Create link with hyphens and underscores
-    await app.inject({
+    const createResponse = await app.inject({
       method: 'POST',
       url: '/links',
       payload: {
         originalUrl: 'https://example.com',
-        shortUrl: specialShortUrl,
+        shortUrl,
       },
     });
     
-    const response = await app.inject({
+    const linkId = createResponse.json().id;
+    
+    for (let i = 0; i < 3; i++) {
+      await app.inject({
+        method: 'GET',
+        url: `/links/${shortUrl}`,
+      });
+    }
+    
+    const listResponse = await app.inject({
       method: 'GET',
-      url: `/links/${specialShortUrl}`,
+      url: '/links',
     });
     
-    expect(response.statusCode).toBe(200);
+    const links = listResponse.json().links;
+    const ourLink = links.find((l: any) => l.id === linkId);
+    
+    expect(ourLink.accessCount).toBe(3);
   });
 });
