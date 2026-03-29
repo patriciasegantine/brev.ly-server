@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { getLinks } from './get-links';
 import { createLink } from '../create-link/create-link';
@@ -38,7 +38,7 @@ async function createSeedLink(params: {
   return result.value;
 }
 
-describe('getLinks use case', () => {
+describe('getLinksService use case', () => {
   it('filters links by shortUrl and returns the filtered total', async () => {
     const prefix = `filter-${Date.now()}`;
 
