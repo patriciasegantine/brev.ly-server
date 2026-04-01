@@ -38,7 +38,7 @@ async function createSeedLink(params: {
   return result.value;
 }
 
-describe('getLinksService use case', () => {
+describe('getLinks use case', () => {
   it('filters links by shortUrl and returns the filtered total', async () => {
     const prefix = `filter-${Date.now()}`;
 
