@@ -1,4 +1,5 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { S3Client } from '@aws-sdk/client-s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import type { Readable } from 'node:stream';
 import { z } from 'zod';
 import { env } from '@/env';
@@ -44,6 +45,16 @@ export function isCloudflareStorageConfigured() {
   return getCloudflareStorageEnv() !== null;
 }
 
+async function readStreamToBuffer(stream: Readable) {
+  const chunks: Buffer[] = [];
+
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
+  }
+
+  return Buffer.concat(chunks);
+}
+
 export async function uploadCsvToCloudflareR2(input: UploadCsvInput) {
   const storageEnv = getCloudflareStorageEnv();
 
@@ -62,11 +73,14 @@ export async function uploadCsvToCloudflareR2(input: UploadCsvInput) {
     },
   });
 
+  const csvBuffer = await readStreamToBuffer(input.body);
+
   await client.send(
     new PutObjectCommand({
       Bucket: storageEnv.bucket,
       Key: input.fileKey,
-      Body: input.body,
+      Body: csvBuffer,
+      ContentLength: csvBuffer.length,
       ContentType: 'text/csv; charset=utf-8',
       CacheControl: 'public, max-age=31536000, immutable',
     })

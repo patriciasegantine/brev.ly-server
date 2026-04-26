@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { PassThrough } from 'node:stream';
-import { and, asc, eq, gt, or } from 'drizzle-orm';
+import { asc } from 'drizzle-orm';
 import { db } from '@/db';
 import { schema } from '@/db/schemas';
 import { type Either, makeLeft, makeRight } from '@/shared/either';
@@ -9,13 +9,6 @@ import {
   uploadCsvToCloudflareR2,
   type UploadCsvInput,
 } from '@/services/storage/cloudflare-r2';
-
-const CSV_BATCH_SIZE = 500;
-
-type ExportCursor = {
-  createdAt: Date;
-  id: string;
-};
 
 type ExportCsvDeps = {
   isStorageConfigured(): boolean;
@@ -60,7 +53,7 @@ function toCsvLine(params: {
   ].join(',');
 }
 
-async function getLinksBatch(cursor: ExportCursor | null) {
+async function getAllLinksForExport() {
   return db
     .select({
       id: schema.links.id,
@@ -70,19 +63,7 @@ async function getLinksBatch(cursor: ExportCursor | null) {
       createdAt: schema.links.createdAt,
     })
     .from(schema.links)
-    .where(
-      cursor
-        ? or(
-            gt(schema.links.createdAt, cursor.createdAt),
-            and(
-              eq(schema.links.createdAt, cursor.createdAt),
-              gt(schema.links.id, cursor.id)
-            )
-          )
-        : undefined
-    )
-    .orderBy(asc(schema.links.createdAt), asc(schema.links.id))
-    .limit(CSV_BATCH_SIZE);
+    .orderBy(asc(schema.links.createdAt), asc(schema.links.id));
 }
 
 function generateExportFileKey() {
@@ -105,32 +86,17 @@ export async function exportLinksCsv(
 
   const writeCsvPromise = (async () => {
     csvStream.write('original_url,short_url,access_count,created_at\n');
+    const links = await getAllLinksForExport();
 
-    let cursor: ExportCursor | null = null;
-
-    while (true) {
-      const linksBatch = await getLinksBatch(cursor);
-
-      if (linksBatch.length === 0) {
-        break;
-      }
-
-      for (const link of linksBatch) {
-        csvStream.write(
-          `${toCsvLine({
-            originalUrl: link.originalUrl,
-            shortUrl: link.shortUrl,
-            accessCount: link.accessCount,
-            createdAt: link.createdAt,
-          })}\n`
-        );
-      }
-
-      const lastLink = linksBatch[linksBatch.length - 1];
-      cursor = {
-        createdAt: lastLink.createdAt,
-        id: lastLink.id,
-      };
+    for (const link of links) {
+      csvStream.write(
+        `${toCsvLine({
+          originalUrl: link.originalUrl,
+          shortUrl: link.shortUrl,
+          accessCount: link.accessCount,
+          createdAt: link.createdAt,
+        })}\n`
+      );
     }
 
     csvStream.end();
@@ -151,9 +117,12 @@ export async function exportLinksCsv(
     });
   } catch (error) {
     console.error('CSV export failed:', error);
+    const reason =
+      error instanceof Error ? error.message : 'Unknown storage error';
+
     return makeLeft({
       code: 'EXPORT_FAILED',
-      message: 'Failed to export links CSV',
+      message: `Failed to export links CSV: ${reason}`,
     });
   }
 }
