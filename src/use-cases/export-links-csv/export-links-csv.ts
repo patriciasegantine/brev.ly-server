@@ -149,7 +149,8 @@ export async function exportLinksCsv(
       fileKey,
       fileUrl,
     });
-  } catch {
+  } catch (error) {
+    console.error('CSV export failed:', error);
     return makeLeft({
       code: 'EXPORT_FAILED',
       message: 'Failed to export links CSV',

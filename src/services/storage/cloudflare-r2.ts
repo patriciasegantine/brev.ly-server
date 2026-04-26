@@ -1,5 +1,6 @@
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import type { Readable } from 'node:stream';
+import { z } from 'zod';
 import { env } from '@/env';
 
 export type UploadCsvInput = {
@@ -15,24 +16,28 @@ type CloudflareStorageEnv = {
   publicUrl: string;
 };
 
-function getCloudflareStorageEnv(): CloudflareStorageEnv | null {
-  if (
-    !env.CLOUDFLARE_ACCOUNT_ID ||
-    !env.CLOUDFLARE_ACCESS_KEY_ID ||
-    !env.CLOUDFLARE_SECRET_ACCESS_KEY ||
-    !env.CLOUDFLARE_BUCKET ||
-    !env.CLOUDFLARE_PUBLIC_URL
-  ) {
-    return null;
-  }
+const cloudflareStorageEnvSchema = z.object({
+  accountId: z.string().min(1),
+  accessKeyId: z.string().min(1),
+  secretAccessKey: z.string().min(1),
+  bucket: z.string().min(1),
+  publicUrl: z.string().url().min(1),
+});
 
-  return {
+function getCloudflareStorageEnv(): CloudflareStorageEnv | null {
+  const parsedEnv = cloudflareStorageEnvSchema.safeParse({
     accountId: env.CLOUDFLARE_ACCOUNT_ID,
     accessKeyId: env.CLOUDFLARE_ACCESS_KEY_ID,
     secretAccessKey: env.CLOUDFLARE_SECRET_ACCESS_KEY,
     bucket: env.CLOUDFLARE_BUCKET,
-    publicUrl: env.CLOUDFLARE_PUBLIC_URL.replace(/\/+$/, ''),
-  };
+    publicUrl: env.CLOUDFLARE_PUBLIC_URL?.replace(/\/+$/, ''),
+  });
+
+  if (!parsedEnv.success) {
+    return null;
+  }
+
+  return parsedEnv.data;
 }
 
 export function isCloudflareStorageConfigured() {
@@ -49,6 +54,8 @@ export async function uploadCsvToCloudflareR2(input: UploadCsvInput) {
   const client = new S3Client({
     region: 'auto',
     endpoint: `https://${storageEnv.accountId}.r2.cloudflarestorage.com`,
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
     credentials: {
       accessKeyId: storageEnv.accessKeyId,
       secretAccessKey: storageEnv.secretAccessKey,
