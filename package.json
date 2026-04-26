@@ -20,7 +20,8 @@
     "db:studio": "drizzle-kit studio",
     "test": "npm run test:db:prepare && npm run test:run",
     "test:db:prepare": "dotenv -e .env.test -- tsx src/test/prepare-db.ts && dotenv -e .env.test -- drizzle-kit migrate",
-    "test:run": "dotenv -e .env.test -- vitest run"
+    "test:run": "dotenv -e .env.test -- vitest run",
+    "pre-pr": "npm run test && npm run build"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
