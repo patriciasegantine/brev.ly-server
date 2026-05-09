@@ -37,20 +37,7 @@ This server application follows the requirements defined for the project:
 - database migrations available through the required script;
 - Docker support for building the application image.
 
-## Challenge checklist
-
-- [x] Deve ser possível criar um link
-  - [x] Não deve ser possível criar um link com URL encurtada mal formatada
-  - [x] Não deve ser possível criar um link com URL encurtada já existente
-- [x] Deve ser possível deletar um link
-- [x] Deve ser possível obter a URL original por meio de uma URL encurtada
-- [x] Deve ser possível listar todas as URL’s cadastradas
-- [x] Deve ser possível incrementar a quantidade de acessos de um link
-- [x] Deve ser possível exportar os links criados em um CSV
-  - [x] Deve ser possível acessar o CSV por meio de uma CDN (Cloudflare R2)
-  - [x] Deve ser gerado um nome aleatório e único para o arquivo
-  - [x] Deve ser possível realizar a listagem de forma performática
-  - [x] O CSV contém URL original, URL encurtada, contagem de acessos e data de criação
+---
 
 ## Scripts
 
@@ -88,3 +75,30 @@ CLOUDFLARE_PUBLIC_URL=
 
 - [Root README](../README.md)
 - [Client README](../client/README.md)
+
+---
+
+## ✅ Checklist
+
+- [x] A link can be created
+  - [x] A link with a badly formatted short URL must not be created
+  - [x] A link with a duplicate short URL must not be created
+- [x] A link can be deleted
+- [x] The original URL can be retrieved via the short URL
+- [x] All registered URLs can be listed
+- [x] The access count of a link can be incremented
+- [x] Links can be exported as a CSV file
+  - [x] The CSV is accessible via a CDN (Cloudflare R2)
+  - [x] A random and unique filename is generated for each export
+  - [x] The listing is performed in a performant way
+  - [x] The CSV contains original URL, short URL, access count and creation date
+- [x] CORS enabled
+- [x] `.env.example` file with all required variables
+- [x] `db:migrate` script available for running database migrations
+- [x] Dockerfile following best practices to build the application image
+
+### ⭐ Extras
+
+- [x] API documentation with Swagger UI
+- [x] Automated CI/CD — test and build pipeline via GitHub Actions
+- [x] Automated tests with Vitest
