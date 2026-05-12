@@ -14,6 +14,11 @@ CLOUDFLARE_BUCKET=
 CLOUDFLARE_PUBLIC_URL=
 ```
 
+## 📖 API Documentation
+
+- `GET /docs` — Scalar UI (interactive)
+- `GET /docs/json` — OpenAPI schema (JSON)
+
 ## 📜 Scripts
 
 - `npm run dev` — start development server
