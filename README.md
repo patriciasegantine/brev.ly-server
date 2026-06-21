@@ -1,6 +1,6 @@
-# Brev.ly — Server
+# Redirect Lab — Server
 
-Fastify REST API for the [Brev.ly](https://github.com/patriciasegantine/brev.ly-client) URL shortening platform.
+Fastify REST API for the [Redirect Lab](https://github.com/patriciasegantine/redirect-lab-client) URL shortening platform.
 
 ---
 
