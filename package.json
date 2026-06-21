@@ -1,5 +1,5 @@
 {
-  "name": "brev.ly-server",
+  "name": "redirect-lab-server",
   "version": "1.0.0",
   "type": "module",
   "description": "",
@@ -9,7 +9,7 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/patriciasegantine/Brev.ly.git"
+    "url": "https://github.com/patriciasegantine/redirect-lab-server.git"
   },
   "scripts": {
     "dev": "tsx watch --env-file .env src/server.ts",

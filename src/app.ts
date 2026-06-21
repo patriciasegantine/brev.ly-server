@@ -19,7 +19,7 @@ app.setSerializerCompiler(serializerCompiler);
 app.register(swagger, {
   openapi: {
     info: {
-      title: 'Brev.ly API',
+      title: 'Redirect Lab API',
       description: 'API for URL shortening service',
       version: '1.0.0',
     },
