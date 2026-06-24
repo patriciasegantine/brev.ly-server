@@ -8,6 +8,9 @@ export async function getLinksRoute(app: FastifyInstance) {
     '/links',
     {
       schema: {
+        tags: ['Links'],
+        summary: 'List all links',
+        description: 'Returns a paginated list of short links. Supports optional text search, sorting by creation date or access count, and direction control.',
         querystring: z.object({
           searchQuery: z.string().optional(),
           sortBy: z.enum(['createdAt', 'accessCount']).optional(),

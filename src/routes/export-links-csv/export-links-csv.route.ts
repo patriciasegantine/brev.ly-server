@@ -9,6 +9,9 @@ export async function exportLinksCsvRoute(app: FastifyInstance) {
     '/links/export',
     {
       schema: {
+        tags: ['Export'],
+        summary: 'Export links as CSV',
+        description: 'Generates a CSV file containing all short links with their slugs, original URLs, access counts, and creation dates. Uploads the file to Cloudflare R2 and returns the public download URL.',
         response: {
           201: z.object({
             fileKey: z.string(),

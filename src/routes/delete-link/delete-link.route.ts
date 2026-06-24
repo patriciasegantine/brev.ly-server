@@ -9,6 +9,9 @@ export async function deleteLinkRoute(app: FastifyInstance) {
     '/links/:id',
     {
       schema: {
+        tags: ['Links'],
+        summary: 'Delete a link',
+        description: 'Permanently removes a short link by its ID. Returns 404 if the link does not exist.',
         params: z.object({
           id: z.string(),
         }),

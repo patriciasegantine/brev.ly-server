@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { createLinkRoute } from "@/routes/create-link/create-link.route";
 import { getLinksRoute } from "@/routes/get-links/get-links.route";
+import { updateLinkRoute } from "@/routes/update-link/update-link.route";
 import { deleteLinkRoute } from "@/routes/delete-link/delete-link.route";
 import { getLinkByShortUrlRoute } from "./get-link-by-short-url/get-link-by-short-url.route";
 import { exportLinksCsvRoute } from '@/routes/export-links-csv/export-links-csv.route';
@@ -11,6 +12,7 @@ export async function routes(app: FastifyInstance) {
   await app.register(createLinkRoute);
   await app.register(getLinksRoute);
   await app.register(exportLinksCsvRoute);
+  await app.register(updateLinkRoute);
   await app.register(getLinkByShortUrlRoute);
   await app.register(deleteLinkRoute);
 }

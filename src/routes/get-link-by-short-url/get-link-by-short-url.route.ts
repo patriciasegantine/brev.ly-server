@@ -9,6 +9,9 @@ export async function getLinkByShortUrlRoute(app: FastifyInstance) {
     '/links/:shortUrl',
     {
       schema: {
+        tags: ['Links'],
+        summary: 'Resolve a short URL',
+        description: 'Returns the original URL for a given slug and increments its access counter. Used by the client to redirect visitors.',
         params: z.object({
           shortUrl: z.string(),
         }),

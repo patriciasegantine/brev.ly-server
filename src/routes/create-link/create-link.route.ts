@@ -9,6 +9,9 @@ export async function createLinkRoute(app: FastifyInstance) {
     '/links',
     {
       schema: {
+        tags: ['Links'],
+        summary: 'Create a short link',
+        description: 'Creates a new short link with a custom slug. Validates the destination URL format and enforces slug uniqueness.',
         body: z.object({
           originalUrl: z.string().url(),
           shortUrl: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_-]+$/),
